@@ -36,3 +36,9 @@ python manage.py collectstatic
 ```sh
 pip list --format=freeze >requirement.txt
 ```
+
+## 运行 bot
+
+```sh
+python ./main.py
+```
