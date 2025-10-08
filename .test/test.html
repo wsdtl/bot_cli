@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebSocket Chat</title>
+  </head>
+  <body>
+    <h1>WebSocket Chat</h1>
+
+    <input type="text" id="messageText" autocomplete="off" />
+    <button onclick="sendMessage()">Send</button>
+
+    <ul id="messages"></ul>
+    <script>
+      var ws;
+      setTimeout(() => {
+        ws = new WebSocket("ws://localhost:8000/ws/bot/usb1234");
+        ws.onmessage = function (event) {
+          
+          var messages = document.getElementById("messages");
+          var message = document.createElement("li");
+          var content = document.createTextNode(event.data);
+          message.appendChild(content);
+          messages.appendChild(message);
+        };
+      }, 1000);
+      function sendMessage(event) {
+        var input = document.getElementById("messageText");
+        const message = {
+          type: "chat",
+          message: input.value,
+        };
+        console.log("Sending message:", message);
+        ws.send(JSON.stringify(message));
+        input.value = "";
+      }
+    </script>
+  </body>
+</html>
