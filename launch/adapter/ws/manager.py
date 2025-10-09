@@ -1,6 +1,8 @@
 import json
 from fastapi import WebSocket
-from typing import Dict
+from typing import Dict, Optional
+
+from launch.log import logger
 
 
 class ConnectionManager:
@@ -35,7 +37,7 @@ class ConnectionManager:
         if client_id in self.active_connections:
             del self.active_connections[client_id]
 
-    async def send_personal_message(self, message: dict, client_id: str) -> None:
+    async def send_personal_message(self, message: dict, client_id: str, is_log: Optional[bool] = True) -> None:
         """发送个人消息
 
         Args:
@@ -43,9 +45,16 @@ class ConnectionManager:
             client_id (str): client_id 唯一标识
         """
 
-        # 发送个人消息 序列化为 JSON 格式
-        if client_id in self.active_connections:
-            await self.active_connections[client_id].send_text(json.dumps(message, ensure_ascii=False))
+        try:
+            # 发送个人消息 序列化为 JSON 格式
+            if client_id in self.active_connections:
+                data = json.dumps(message, ensure_ascii=False)
+                await self.active_connections[client_id].send_text(data)
+                if is_log:
+                    logger.opt(colors=True).success(f"<g>发送消息 to </g> <y>{client_id}</y> <g>内容:</g> <y>{data}</y>")
+
+        except Exception:
+            self.disconnect(client_id)
 
     async def broadcast(self, message: dict, exclude_client: str = None) -> None:
         """广播消息

@@ -1,4 +1,4 @@
-import json
+import asyncio
 from datetime import datetime
 from launch.adapter.ws import WsMessageHander, ConnectionManager
 
@@ -24,3 +24,5 @@ async def write_notification(client_id: str, message: str, manager: "ConnectionM
         },
         client_id,
     )
+    await asyncio.sleep(3)  # 模拟处理时间
+    

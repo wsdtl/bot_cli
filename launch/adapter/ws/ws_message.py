@@ -10,6 +10,9 @@ from .rule import RateLimiter
 
 router = APIRouter()
 
+# 保持每个tasks的引用，防止被垃圾回收
+background_tasks = set()
+
 
 @router.websocket("/ws/bot/{client_id}")
 @RateLimiter.websocket()
@@ -27,6 +30,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
                 "timestamp": datetime.now().isoformat(),
             },
             client_id,
+            is_log=False,
         )
 
         while True:
@@ -50,14 +54,20 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
             message_type = message_data.get("type", "other")
             if message_type == "chat":
                 # 接入消息处理器进行消息处理
-                await WsMessageHander.background_task(
-                    client_id=client_id,
-                    message_data=message_data,
-                    manager=manager,
+                logger.opt(colors=True).success(f"<g>收到消息 from </g> <y>{client_id}</y> <g>内容:</g> <y>{message_data}</y>")
+                task = asyncio.create_task(
+                    WsMessageHander.background_task(
+                        client_id=client_id,
+                        message_data=message_data,
+                        manager=manager,
+                    )
                 )
-                logger.opt(colors=True).success(
-                    f"<g>收到消息 from </g> <y>{client_id}</y> <g>内容:</g> <y>{message_data}</y>"
-                )
+                # 将 task 添加到集合中，以保持强引用：
+                background_tasks.add(task)
+
+                # 为了防止 task 被永远保持强引用，而无法被垃圾回收
+                # 让每个 task 在结束后将自己从集合中移除：
+                task.add_done_callback(background_tasks.discard)
 
             elif message_type == "ping":
                 # 响应心跳包
@@ -72,5 +82,5 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
                 # 处理其他类型的消息
                 pass
 
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, asyncio.TimeoutError):
         manager.disconnect(client_id)
