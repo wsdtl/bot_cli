@@ -12,6 +12,7 @@ router = APIRouter()
 
 # 保持每个tasks的引用，防止被垃圾回收
 background_tasks = set()
+
 # 创建任务并发限制器实例
 task_limiter = TaskLimiter()
 
@@ -19,7 +20,6 @@ task_limiter = TaskLimiter()
 @router.websocket("/ws/bot/{client_id}")
 @RateLimiter.websocket()
 async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
-
     await manager.connect(websocket, client_id)
 
     try:
@@ -36,7 +36,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
         )
 
         while True:
-
             # 接收客户端消息
             data = await asyncio.wait_for(websocket.receive_text(), timeout=300.0)  # 5分钟超时
 
@@ -54,9 +53,12 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
 
             # 处理不同类型的消息
             message_type = message_data.get("type", "other")
+            
             if message_type == "chat":
                 # 接入消息处理器进行消息处理
                 logger.opt(colors=True).success(f"<g>收到消息 from </g> <y>{client_id}</y> <g>内容:</g> <y>{message_data}</y>")
+                
+                # 创建后台任务，并限制并发数
                 task = asyncio.create_task(
                     task_limiter.bounded_task(
                         WsMessageHander.background_task(
@@ -66,6 +68,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
                         )
                     )
                 )
+                
                 # 将 task 添加到集合中，以保持强引用：
                 background_tasks.add(task)
 
