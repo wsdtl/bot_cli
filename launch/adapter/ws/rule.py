@@ -1,7 +1,24 @@
+import asyncio
 from functools import wraps
+from typing import Optional
 from datetime import datetime, timedelta
 from collections import defaultdict
 from fastapi import WebSocket, status
+
+
+class TaskLimiter:
+    """异步任务并发限制器"""
+
+    def __init__(self, max_concurrent: Optional[int] = 1000):
+        """初始化信号量以限制并发任务数"""
+
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def bounded_task(self, coro):
+        """限制并发执行的协程任务"""
+
+        async with self.semaphore:
+            return await coro
 
 
 class RateLimiter:
@@ -27,9 +44,7 @@ class RateLimiter:
 
                 # 清理过期的连接记录
                 RateLimiter.websocket_connected[client_id] = [
-                    connected_time
-                    for connected_time in RateLimiter.websocket_connected[client_id]
-                    if current_time - connected_time < timedelta(seconds=window)
+                    connected_time for connected_time in RateLimiter.websocket_connected[client_id] if current_time - connected_time < timedelta(seconds=window)
                 ]
 
                 # 检查是否超过频率限制

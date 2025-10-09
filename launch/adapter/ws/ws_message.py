@@ -6,12 +6,14 @@ from launch.log import logger
 
 from .manager import manager
 from .ws_hander import WsMessageHander
-from .rule import RateLimiter
+from .rule import RateLimiter, TaskLimiter
 
 router = APIRouter()
 
 # 保持每个tasks的引用，防止被垃圾回收
 background_tasks = set()
+# 创建任务并发限制器实例
+task_limiter = TaskLimiter()
 
 
 @router.websocket("/ws/bot/{client_id}")
@@ -56,10 +58,12 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
                 # 接入消息处理器进行消息处理
                 logger.opt(colors=True).success(f"<g>收到消息 from </g> <y>{client_id}</y> <g>内容:</g> <y>{message_data}</y>")
                 task = asyncio.create_task(
-                    WsMessageHander.background_task(
-                        client_id=client_id,
-                        message_data=message_data,
-                        manager=manager,
+                    task_limiter.bounded_task(
+                        WsMessageHander.background_task(
+                            client_id=client_id,
+                            message_data=message_data,
+                            manager=manager,
+                        )
                     )
                 )
                 # 将 task 添加到集合中，以保持强引用：
