@@ -9,7 +9,7 @@ from fastapi import WebSocket, status
 class TaskLimiter:
     """异步任务并发限制器"""
 
-    def __init__(self, max_concurrent: Optional[int] = 1000):
+    def __init__(self, max_concurrent: Optional[int] = 100):
         """初始化信号量以限制并发任务数"""
 
         self.semaphore = asyncio.Semaphore(max_concurrent)
