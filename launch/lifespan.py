@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from .log import logger
 from .on_event import OnEvent
-from .load_router import Routers
+from .load_router import Routers, FastAPILoadRouter
 from .schedulers import Scheduler
 from .mount import FastAPIMount, AdapterMount
 
@@ -16,9 +16,14 @@ async def lifespan(app: "FastAPI") -> AsyncGenerator:
     """
     创建并启动后台线程来运行任务
     """
-
+    
     # 挂载相应文件和服务
     FastAPIMount(app)
+    
+    # 导入模块设置
+    FastAPILoadRouter()
+
+
 
     # 挂载 Adapter
     AdapterList = AdapterMount(app)
