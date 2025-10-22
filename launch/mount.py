@@ -28,11 +28,23 @@ def AdapterMount(app: "FastAPI") -> list:
     """
     挂载 Adapter
     """
+    _adapter = []
 
-    # 挂载 ws 消息处理路由接口
-    from .adapter import ws
+    # # 挂载 ws 消息处理器
+    # from .adapter import ws
+
+    # app.include_router(ws.router)
+    # logger.opt(colors=True).success(f"<g>Loaded hander:</g> <y> /ws/bot/ Adapter已加载</y>")
+    # _adapter.append(ws.WsMessageHander)
+
+    # 挂载 R485 消息处理
+    import asyncio
+    from .adapter import R485
+
+    logger.opt(colors=True).success(f"<g>Loaded hander:</g> <y> R485 Adapter已加载</y>")
     
-    app.include_router(ws.router)
-    logger.opt(colors=True).success(f"<g>Loaded hander:</g> <y> /ws/bot/ Adapter已加载</y>")
+    # 运行 R485 服务器
+    asyncio.create_task(R485.R485Message.run())
+    _adapter.append(R485.R485MessageHander)
 
-    return [ws.WsMessageHander]
+    return _adapter

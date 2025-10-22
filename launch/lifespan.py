@@ -16,14 +16,12 @@ async def lifespan(app: "FastAPI") -> AsyncGenerator:
     """
     创建并启动后台线程来运行任务
     """
-    
+
     # 挂载相应文件和服务
     FastAPIMount(app)
-    
+
     # 导入模块设置
     FastAPILoadRouter()
-
-
 
     # 挂载 Adapter
     AdapterList = AdapterMount(app)

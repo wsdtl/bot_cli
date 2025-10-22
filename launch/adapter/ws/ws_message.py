@@ -5,7 +5,7 @@ from fastapi import WebSocket, WebSocketDisconnect, APIRouter
 from launch.log import logger
 
 from .manager import manager
-from .ws_hander import WsMessageHander
+from .ws_message_hander import WsMessageHander
 from .rule import RateLimiter, TaskLimiter
 
 router = APIRouter()
