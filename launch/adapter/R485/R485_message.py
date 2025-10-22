@@ -61,7 +61,7 @@ class R485Message:
                             R485Message.TASKLIMITER.bounded_task(
                                 R485MessageHander.background_task(
                                     cmd=k,
-                                    message=v,
+                                    message={_k: _v for d in v for _k, _v in d.items()},
                                     writer=writer,
                                     send=R485Message.send_data,
                                 )

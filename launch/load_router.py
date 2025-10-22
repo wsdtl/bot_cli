@@ -131,3 +131,4 @@ def FastAPILoadRouter() -> None:
 
     LoadRouter.load_module_group("src.event")
     LoadRouter.load_module("src.ws_cs")
+    LoadRouter.load_module("src.R485")
