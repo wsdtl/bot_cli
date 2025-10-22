@@ -43,7 +43,7 @@ class R485Message:
 
                 # 将字节流转为字符串并解析为 JSON
                 try:
-                    # 序列化数据
+                    # 反序列化数据
                     json_string = data.decode("utf-8").strip()
                     json_data = json.loads(json_string)
 
